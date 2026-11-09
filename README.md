@@ -57,7 +57,9 @@
 ## INSERT / UPDATE / DELEETE / SELECT SQL과 실행 결과
 
 - INSERT: INSERT INTO movie_sql (title, director, genre, rating) VALUES ('Inception', 'Nolan', 'SF', 9.1), ('Interstellar', 'Nolan', 'SF', 9.3), ('Parasite', 'Bong', 'Drama', 9.0);
-- INSERT 결과 3행이 저장됐다. INSERT 실행 직후의 별도 화면은 남아 있지 않다.
+- INSERT 결과 3행이 저장됐다. 추가 실습에서 id 4, 5, 6으로 들어간 직후 화면을 찍음.
+- 화면: INSERT 후 추가한 3행 조회 / screenshots/sql_insert.png
+- 촬영 후 추가 실습 행 3개만 삭제하고 기존 2행은 유지함.
 - UPDATE: UPDATE movie_sql SET rating = 9.5 WHERE title = 'Interstellar';
 - UPDATE 결과 Interstellar의 rating이 9.3에서 9.5로 바뀌었고, 조회하면 3행 중 해당 행만 변경되어 있다.
 - 화면: UPDATE 실행 결과 / screenshots/sql_update.png
@@ -110,7 +112,7 @@
 - DELETE /api/travels/{id}: 삭제, 204
 - GET /api/travels?country=Japan: 국가 검색
 - GET /api/travels?country=Japan&minDays=5&maxDays=7: 국가와 여행일수 범위 검색
-- GET /api/travels?keyword=tour: 여행지 부분 검색, 예산 내림차순
+- GET /api/travels?keyword=tour: 여행ㅇ지 부분 검색, 예산 내림차순
 - GET /api/travels?minBudget=500000: 예산 초과 검색, 출발일 오름차순
 
 ## 요청·응답 예시
@@ -176,7 +178,7 @@
 - GitHub에 push한 저장소를 Render Web Service로 연결했다.
 - Runtime은 Docker, Dockerfile은 프로젝트 루트의 것을 사용했다.
 - Dockerfile은 gradle:8.14-jdk17에서 test와 bootJar를 실행하고 eclipse-temurin:17-jre에서 jar를 실행한다.
-- Health Check Path는 /api/travels로 지정했다.
+- Health Check Path는 /api/travels로 지ㅈ정했다.
 - DB_URL, DB_USERNAME, DB_PASSWORD를 Environment에 넣고 배포했다.
 
 ## 배포 URL의 CRUD 테스트 결과
@@ -196,6 +198,13 @@
 - 테스트한 id 8은 삭제함. 기존 데이터만 남겨둠.
 
 ## MariaDB 데이터 저장 확인
+
+- Render 주소에서 POST /api/travels 호출, 201 응답과 id 10 확인.
+- 여행지 Render DB Evidence 20261109, 예산 400000으로 등록됨.
+- DBeaver 원격 MariaDB에서 id 10과 같은 여행지 이름으로 SELECT, 1행 확인함.
+- 화면: Render에서 등록한 데이터의 원격 DB 조회 / screenshots/render_remote_insert.png
+- 실제 등록 요청과 응답 기록: screenshots/render_remote_post.json
+- id 10은 제출 확인용으로 남겨둠. 아래 두 화면은 이전 로컬 DB 실습 결과임.
 
 - 등록하면 created_at, updated_at이 같은 시각
 - 화면: 등록 후 DB / screenshots/step10_dbeaver_before.png
@@ -228,7 +237,7 @@
 
 - 가장 중요한 코드는 TravelService의 update()다.
 - findTravel(id)로 repository.findById()를 호출해 Entity를 조회한다.
-- 조회한 Entity는 영속성 컨텍스트가 관리하는 영속 상태다.
+- 조회한 Entity는 영속성 컹텍스트가 관리하는 영속 상태다.
 - travel.update(...)로 필드 값만 바꾸고 repository.save()는 호출하지 않는다.
 - 메서드에 붙은 @Transactional이 커밋 시점에 최초 값과 현재 값을 비교하게 하고, 달라진 컬럼을 UPDATE 한다.
 - 그래서 save() 없이도 수정이 DB에 반영되고, 응답의 updatedAt은 커밋 전 값이라 조회했을 때보다 이전 시각으로 보일 수 있다.

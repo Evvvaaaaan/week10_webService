@@ -1,0 +1,23 @@
+{
+  "url": "https://week10-webservice-184j.onrender.com/api/travels",
+  "status": 201,
+  "request": {
+    "destination": "Render DB Evidence 20261109",
+    "country": "South Korea",
+    "city": "Seoul",
+    "departureDate": "2027-05-01",
+    "durationDays": 3,
+    "budget": 400000
+  },
+  "response": {
+    "id": 10,
+    "destination": "Render DB Evidence 20261109",
+    "country": "South Korea",
+    "city": "Seoul",
+    "departureDate": "2027-05-01",
+    "durationDays": 3,
+    "budget": 400000,
+    "createdAt": "2026-11-09T11:13:47.94565637",
+    "updatedAt": "2026-11-09T11:13:47.94565637"
+  }
+}
