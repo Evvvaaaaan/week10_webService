@@ -111,25 +111,15 @@ public class TravelService {
 
         final Travel travel = findTravel(id);
 
-        travel.updateDestination(request.destination());
-        travel.updateCountry(request.country());
-        travel.updateCity(request.city());
-        travel.updateDepartureDate(request.departureDate());
-        travel.updateDurationDays(request.durationDays());
-        travel.updateBudget(request.budget());
+        travel.update(request.destination(), request.country(), request.city(),
+                request.departureDate(), request.durationDays(), request.budget());
 
         return TravelResponse.from(travel);
     }
 
     public void delete(final Long id) {
-        if (id == null) {
-            throw new CustomException(ExceptionCode.ID_NOT_FOUND);
-        }
-        // deleteById()는 대상이 없어도 예외 없이 지나가므로, 먼저 존재 여부를 확인해 404로 응답한다.
-        if (!repository.existsById(id)) {
-            throw new CustomException(ExceptionCode.ID_NOT_FOUND);
-        }
-
+        // deleteById()는 대상이 없어도 예외 없이 지나가므로, findById()로 먼저 존재를 확인한다.
+        findTravel(id);
         repository.deleteById(id);
     }
 
