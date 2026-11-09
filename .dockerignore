@@ -1,0 +1,13 @@
+.git
+.gradle
+.gradle-dist
+build
+out
+.idea
+*.iml
+.DS_Store
+.env
+.env.*
+*.log
+screenshots
+README*.md
