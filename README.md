@@ -2,7 +2,7 @@
 
 - GitHub: https://github.com/2026-2-WebService/assign10-c01-22300404
 - 개인 저장소: https://github.com/Evvvaaaaan/week10_webService
-- Render: (배포 후 입력)
+- Render: https://week10-webservice-184j.onrender.com
 
 # 1. 프로젝트 소개
 
