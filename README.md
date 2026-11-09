@@ -38,9 +38,35 @@
 
 ## 새 Table 생성 SQL
 
-- CREATE TABLE movie_sql (id BIGINT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(100) NOT NULL, director VARCHAR(100), genre VARCHAR(50), rating DOUBLE);
+```sql
+CREATE TABLE movie_sql (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    director VARCHAR(100),
+    genre VARCHAR(50),
+    rating DOUBLE
+);
+```
+
+![Table definition and final SELECT result](screenshots/sql_create.png)
 
 ## INSERT / UPDATE / DELETE / SELECT SQL과 실행 결과
+
+```sql
+INSERT INTO movie_sql(title, director, genre, rating)
+VALUES ('Inception', 'Nolan', 'SF', 9.1),
+       ('Interstellar', 'Nolan', 'SF', 9.3),
+       ('Parasite', 'Bong', 'Drama', 9.0);
+
+UPDATE movie_sql SET rating = 9.5 WHERE title = 'Interstellar';
+DELETE FROM movie_sql WHERE title = 'Parasite';
+
+SELECT * FROM movie_sql;
+SELECT title, rating FROM movie_sql;
+SELECT * FROM movie_sql WHERE genre = 'SF';
+```
+
+The INSERT statement above reconstructs the practice query from the recorded values; a separate INSERT execution screenshot is not available.
 
 - INSERT로 Inception, Interstellar, Parasite 3행을 추가했다.
 - UPDATE로 Interstellar의 rating을 9.3에서 9.5로 바꿨다.
@@ -50,6 +76,8 @@
 ![UPDATE 결과](screenshots/sql_update.png)
 
 ![DELETE 결과](screenshots/sql_delete.png)
+
+![Column SELECT result](screenshots/sql_select_columns.png)
 
 ![조건 조회](screenshots/sql_select_where.png)
 
