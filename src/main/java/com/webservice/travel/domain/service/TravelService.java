@@ -99,7 +99,8 @@ public class TravelService {
      * STEP 4. Dirty Checking을 이용한 수정.
      * findTravel()이 findById()로 조회한 Entity는 영속성 컨텍스트가 관리하는 영속 상태다.
      * 이 상태에서 updateXxx()로 필드만 바꾸면, 메서드가 끝나고 트랜잭션이 커밋될 때
-     * Hibernate가 최초 조회 값(스냅샷)과 현재 값을 비교해 달라진 컬럼만 UPDATE 한다.
+     * Hibernate compares the snapshot with the current state and executes an UPDATE when changes are detected.
+     * Without @DynamicUpdate, the SQL includes all updatable columns, including unchanged values.
      * 그래서 repository.save()를 호출하지 않아도 DB에 반영된다.
      */
     @Transactional
@@ -129,8 +130,9 @@ public class TravelService {
      *   (1) 1차 캐시: 같은 id를 다시 조회하면 DB에 가지 않고 보관 중인 Entity를 돌려준다.
      *   (2) Dirty Checking: 보관 중인 Entity의 변경을 감지해 UPDATE를 실행한다.
      *   (3) 쓰기 지연: INSERT/UPDATE SQL을 모아 두었다가 flush() 시점에 한꺼번에 보낸다.
-     * - Dirty Checking은 조회 시점의 값을 스냅샷으로 복사해 두었다가, 커밋 직전 flush 때
-     *   현재 값과 비교해 달라진 컬럼만 UPDATE 한다.
+     * - Dirty Checking stores a snapshot when the entity is loaded. At flush time, Hibernate compares
+     *   the current state with the snapshot and executes an UPDATE if changes are detected.
+     *   Without @DynamicUpdate, the SQL includes all updatable columns, including unchanged values.
      * - 이 비교는 영속성 컨텍스트가 살아 있는 동안에만 가능하다. @Transactional이 메서드 범위에서
      *   트랜잭션과 영속성 컨텍스트를 유지해 주기 때문에 Dirty Checking이 동작한다.
      * - 반대로 트랜잭션 밖에서 조회한 Entity는 준영속(detached) 상태가 되어 변경을 감지하지 못하고,

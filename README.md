@@ -117,9 +117,27 @@
 
 ## 요청·응답 예시
 
-- POST /api/travels 등록 예시. id와 시각은 실행에 따라 달라짐.
+- 아래 JSON은 API 형식을 설명하는 예시이며 실제 실행 기록은 아니다. id와 시각은 실행에 따라 달라지고, 전체 조회 예시는 데이터가 1건인 경우다.
+- POST /api/travels 등록
 - 요청 JSON: {"destination":"Seoul tour","country":"South Korea","city":"Seoul","departureDate":"2027-05-01","durationDays":3,"budget":400000}
 - 응답 JSON, 201: {"id":1,"destination":"Seoul tour","country":"South Korea","city":"Seoul","departureDate":"2027-05-01","durationDays":3,"budget":400000,"createdAt":"2026-11-09T10:00:00","updatedAt":"2026-11-09T10:00:00"}
+
+- GET /api/travels 전체 조회: 요청 본문 없음.
+- 응답 JSON, 200: [{"id":1,"destination":"Seoul tour","country":"South Korea","city":"Seoul","departureDate":"2027-05-01","durationDays":3,"budget":400000,"createdAt":"2026-11-09T10:00:00","updatedAt":"2026-11-09T10:00:00"}]
+
+- GET /api/travels/1 단건 조회: 요청 본문 없음.
+- 응답 JSON, 200: {"id":1,"destination":"Seoul tour","country":"South Korea","city":"Seoul","departureDate":"2027-05-01","durationDays":3,"budget":400000,"createdAt":"2026-11-09T10:00:00","updatedAt":"2026-11-09T10:00:00"}
+
+- PUT /api/travels/1 수정
+- 요청 JSON: {"destination":"Seoul tour","country":"South Korea","city":"Seoul","departureDate":"2027-05-01","durationDays":7,"budget":800000}
+- 응답 JSON, 200: {"id":1,"destination":"Seoul tour","country":"South Korea","city":"Seoul","departureDate":"2027-05-01","durationDays":7,"budget":800000,"createdAt":"2026-11-09T10:00:00","updatedAt":"2026-11-09T10:00:00"}
+- 현재 구현은 트랜잭션 커밋 전에 응답 DTO를 만들므로 PUT 응답의 updatedAt은 수정 전 시각일 수 있다.
+
+- GET /api/travels/1 수정 결과 조회: 요청 본문 없음.
+- 응답 JSON, 200: {"id":1,"destination":"Seoul tour","country":"South Korea","city":"Seoul","departureDate":"2027-05-01","durationDays":7,"budget":800000,"createdAt":"2026-11-09T10:00:00","updatedAt":"2026-11-09T10:05:00"}
+
+- DELETE /api/travels/1 삭제: 요청 본문 없음.
+- 응답: 204 No Content. 응답 본문이 없으므로 JSON도 반환하지 않는다.
 
 ## Entity랑 DB 컬럼
 
@@ -138,7 +156,7 @@
 
 ## save(), findAll(), findById(), deleteById() 사용 결과
 
-- save(): 등록과 수정에 사용한다. id가 없으면 INSERT, 있으면 UPDATE다.
+- save(): 이 프로젝트에서는 새 Travel 등록에 사용하며 INSERT가 실행된다. 수정은 @Transactional 안에서 조회한 Entity의 값을 바꾸는 Dirty Checking으로 처리하므로 save()를 호출하지 않는다.
 - findAll(): 전체 조회에 사용한다. SELECT 결과를 List로 받는다.
 - findById(): 단건 조회와 수정 전 조회에 사용한다. Optional을 반환한다.
 - deleteById(): 삭제에 사용한다. 삭제 전에 findById()로 존재를 확인해 없는 id면 404를 응답한다.
@@ -222,7 +240,7 @@
 ## Key Learning
 
 - Query Method는 findBy + 필드 + 조건 규칙으로 이름만 지으면 JPQL과 SQL이 만들어져 단순 조건 검색에 SQL을 직접 쓰지 않아도 된다.
-- Dirty Checking은 영속성 컨텍스트가 조회 시점의 스냅샷과 현재 값을 비교해 바뀐 컬럼을 UPDATE 하는 방식이고, @Transactional이 영속 상태를 유지해 준다.
+- Dirty Checking은 영속성 컨텍스트가 조회 시점의 스냅샷과 현재 값을 비교해 변경을 감지하고 UPDATE를 실행하는 방식이고, @Transactional이 영속 상태를 유지해 준다. 현재 Entity에는 @DynamicUpdate가 없어 UPDATE에는 변경하지 않은 필드를 포함한 수정 가능한 컬럼들이 함께 들어간다.
 - Auditing은 @EnableJpaAuditing, @EntityListeners, @CreatedDate, @LastModifiedDate가 함께 있어야 동작하고, updatable = false로 생성 시각을 고정한다.
 
 ## Problem & Solution
@@ -239,7 +257,7 @@
 - findTravel(id)로 repository.findById()를 호출해 Entity를 조회한다.
 - 조회한 Entity는 영속성 컹텍스트가 관리하는 영속 상태다.
 - travel.update(...)로 필드 값만 바꾸고 repository.save()는 호출하지 않는다.
-- 메서드에 붙은 @Transactional이 커밋 시점에 최초 값과 현재 값을 비교하게 하고, 달라진 컬럼을 UPDATE 한다.
+- @Transactional로 유지되는 영속성 컨텍스트에서 Hibernate가 flush 시점에 최초 값과 현재 값을 비교해 변경을 감지하고 UPDATE를 실행한다. 현재 SQL에는 변경된 컬럼만이 아니라 수정 가능한 컬럼들이 함께 포함되며, updatable = false인 created_at은 제외된다.
 - 그래서 save() 없이도 수정이 DB에 반영되고, 응답의 updatedAt은 커밋 전 값이라 조회했을 때보다 이전 시각으로 보일 수 있다.
 
 ## AI Usage
