@@ -108,9 +108,126 @@ The INSERT statement above reconstructs the practice query from the recorded val
 
 - POST /api/travels, GET /api/travels, GET·PUT·DELETE /api/travels/{id}
 - GET /api/travels?country=, ?country=&minDays=&maxDays=, ?keyword=, ?minBudget=
-- 요청: {"destination":"Deploy Check","country":"South Korea","city":"Seoul","departureDate":"2027-05-01","durationDays":3,"budget":400000}
-- 응답: {"id":8,"destination":"Deploy Check","createdAt":"2026-11-09T07:12:41.183223","updatedAt":"2026-11-09T07:12:41.183223"}
-- 오류: 400 INVALID_REQUEST, 404 ID_NOT_FOUND
+The following examples describe the controller and DTO contract. They are illustrative JSON, not newly captured deployment responses. Generated IDs and timestamps vary.
+
+### POST /api/travels
+
+Request (`Content-Type: application/json`):
+
+```json
+{
+  "destination": "Deploy Check",
+  "country": "South Korea",
+  "city": "Seoul",
+  "departureDate": "2027-05-01",
+  "durationDays": 3,
+  "budget": 400000
+}
+```
+
+Response: `201 Created`, `Location: /api/travels/8`.
+
+```json
+{
+  "id": 8,
+  "destination": "Deploy Check",
+  "country": "South Korea",
+  "city": "Seoul",
+  "departureDate": "2027-05-01",
+  "durationDays": 3,
+  "budget": 400000,
+  "createdAt": "2026-11-09T07:12:41.183223",
+  "updatedAt": "2026-11-09T07:12:41.183223"
+}
+```
+
+### GET /api/travels
+
+No request body. Response: `200 OK`, an array of TravelResponse objects (or `[]` when empty).
+
+```json
+[
+  {
+    "id": 8,
+    "destination": "Deploy Check",
+    "country": "South Korea",
+    "city": "Seoul",
+    "departureDate": "2027-05-01",
+    "durationDays": 3,
+    "budget": 400000,
+    "createdAt": "2026-11-09T07:12:41.183223",
+    "updatedAt": "2026-11-09T07:12:41.183223"
+  }
+]
+```
+
+### GET /api/travels/8
+
+No request body. Response: `200 OK`.
+
+```json
+{
+  "id": 8,
+  "destination": "Deploy Check",
+  "country": "South Korea",
+  "city": "Seoul",
+  "departureDate": "2027-05-01",
+  "durationDays": 3,
+  "budget": 400000,
+  "createdAt": "2026-11-09T07:12:41.183223",
+  "updatedAt": "2026-11-09T07:12:41.183223"
+}
+```
+
+### PUT /api/travels/8
+
+Request (`Content-Type: application/json`); all required fields are supplied:
+
+```json
+{
+  "destination": "Deploy Check",
+  "country": "South Korea",
+  "city": "Seoul",
+  "departureDate": "2027-05-01",
+  "durationDays": 3,
+  "budget": 450000
+}
+```
+
+Response: `200 OK`.
+
+```json
+{
+  "id": 8,
+  "destination": "Deploy Check",
+  "country": "South Korea",
+  "city": "Seoul",
+  "departureDate": "2027-05-01",
+  "durationDays": 3,
+  "budget": 450000,
+  "createdAt": "2026-11-09T07:12:41.183223",
+  "updatedAt": "2026-11-09T07:12:41.183223"
+}
+```
+
+The PUT response is constructed before transaction commit, so its updatedAt can still contain the previous value. A subsequent GET returns the persisted audit timestamp.
+
+### DELETE /api/travels/8
+
+No request body. Response: `204 No Content`, with no response body. A subsequent GET for the deleted ID returns `404 Not Found`.
+
+### Error responses
+
+A missing required value (for example, `{}`) returns `400 INVALID_REQUEST`. An unknown numeric ID returns `404 ID_NOT_FOUND`. The response includes timestamp, status, code, and message:
+
+```json
+{
+  "timestamp": "2026-11-09T10:29:54.602637683Z",
+  "status": "NOT_FOUND",
+  "code": "ID_NOT_FOUND",
+  "message": "\uc544\uc774\ub514\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+}
+```
 
 ## JPA Entity와 MariaDB Table 비교
 
