@@ -113,6 +113,12 @@
 - GET /api/travels?keyword=tour: 여행지 부분 검색, 예산 내림차순
 - GET /api/travels?minBudget=500000: 예산 초과 검색, 출발일 오름차순
 
+## 요청·응답 예시
+
+- POST /api/travels 등록 예시. id와 시각은 실행에 따라 달라짐.
+- 요청 JSON: {"destination":"Seoul tour","country":"South Korea","city":"Seoul","departureDate":"2027-05-01","durationDays":3,"budget":400000}
+- 응답 JSON, 201: {"id":1,"destination":"Seoul tour","country":"South Korea","city":"Seoul","departureDate":"2027-05-01","durationDays":3,"budget":400000,"createdAt":"2026-11-09T10:00:00","updatedAt":"2026-11-09T10:00:00"}
+
 ## Entity랑 DB 컬럼
 
 - id는 id 컬럼, bigint, 기본키, auto_increment로 만들어진다.
