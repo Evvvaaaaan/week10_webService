@@ -1,24 +1,23 @@
-package com.webservice.travel.service;
+package com.webservice.travel.domain.service;
 
-import com.webservice.travel.dto.TravelRequest;
-import com.webservice.travel.dto.TravelResponse;
-import com.webservice.travel.entity.Travel;
-import com.webservice.travel.repository.TravelRepository;
-import org.springframework.http.HttpStatus;
+import com.webservice.travel.domain.dto.TravelRequest;
+import com.webservice.travel.domain.dto.TravelResponse;
+import com.webservice.travel.domain.model.Travel;
+import com.webservice.travel.domain.repository.TravelRepository;
+import com.webservice.travel.global.exception.CustomException;
+import com.webservice.travel.global.exception.constant.ExceptionCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 /*
  * @Service는 이 클래스가 비즈니스 로직을 담당하는 스프링 빈임을 알린다.
- * @Transactional을 클래스에 붙이면 이 클래스의 public 메서드가 실행될 때마다 트랜잭션이 시작되고,
- * 정상 종료하면 커밋, 예외가 나면 롤백된다.
+ * 트랜잭션은 모든 메서드에 무조건 거는 대신, Dirty Checking이 필요한 update()에만 건다.
+ * (save(), deleteById()는 JpaRepository 내부에서 이미 트랜잭션을 처리한다.)
  */
 @Service
-@Transactional
 public class TravelService {
     private final TravelRepository repository;
 
@@ -33,12 +32,14 @@ public class TravelService {
      * - id가 값으로 채워져 있으면 이미 DB에 있는 데이터로 판단해 merge()를 호출하고 UPDATE를 실행한다.
      *   (id는 @GeneratedValue(IDENTITY)에 의해 INSERT가 끝난 뒤에 채워지므로,
      *    새로 만든 객체는 저장 전까지 id가 null이다.)
-     * - create()는 id가 없는 새 Travel을 save()하므로 INSERT가 되고,
-     *   update()는 findById()로 찾은 id가 있는 Travel을 save()하므로 UPDATE가 된다.
+     * - create()는 id가 없는 새 Travel을 save()하므로 INSERT가 된다.
      */
-    public TravelResponse create(TravelRequest request) {
-        Travel travel = new Travel(request.destination(), request.country(), request.city(),
+    public TravelResponse create(final TravelRequest request) {
+        validateRequest(request);
+
+        final Travel travel = new Travel(request.destination(), request.country(), request.city(),
                 request.departureDate(), request.durationDays(), request.budget());
+
         return TravelResponse.from(repository.save(travel));
     }
 
@@ -53,46 +54,82 @@ public class TravelService {
      */
 
     // [단일 조건] 국가가 정확히 일치하는 여행을 조회한다.
-    public List<TravelResponse> findByCountry(String country) {
+    public List<TravelResponse> findByCountry(final String country) {
+        if (country == null || country.isBlank()) {
+            throw new CustomException(ExceptionCode.INVALID_REQUEST);
+        }
+
         return toResponses(repository.findByCountry(country));
     }
 
     // [복합 조건] 국가가 일치하면서 여행일수가 minDays ~ maxDays 사이인 여행을 조회한다.
-    public List<TravelResponse> findByCountryAndDurationDaysBetween(String country, Integer minDays, Integer maxDays) {
+    public List<TravelResponse> findByCountryAndDurationDaysBetween(final String country,
+                                                                    final Integer minDays,
+                                                                    final Integer maxDays) {
+        if (country == null || country.isBlank() || minDays == null || maxDays == null) {
+            throw new CustomException(ExceptionCode.INVALID_REQUEST);
+        }
+
         return toResponses(repository.findByCountryAndDurationDaysBetween(country, minDays, maxDays));
     }
 
     // [정렬] 여행지 이름에 keyword가 포함된 여행을 예산 내림차순으로 조회한다. 대소문자는 구분하지 않는다.
-    public List<TravelResponse> findByDestinationKeyword(String keyword) {
+    public List<TravelResponse> findByDestinationKeyword(final String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            throw new CustomException(ExceptionCode.INVALID_REQUEST);
+        }
+
         return toResponses(repository.findByDestinationContainingIgnoreCaseOrderByBudgetDesc(keyword));
     }
 
     // [정렬] 예산이 minBudget보다 큰 여행을 출발일 오름차순으로 조회한다.
-    public List<TravelResponse> findByMinBudget(BigDecimal minBudget) {
+    public List<TravelResponse> findByMinBudget(final BigDecimal minBudget) {
+        if (minBudget == null) {
+            throw new CustomException(ExceptionCode.INVALID_REQUEST);
+        }
+
         return toResponses(repository.findByBudgetGreaterThanOrderByDepartureDateAsc(minBudget));
     }
 
-    public TravelResponse findById(Long id) {
+    public TravelResponse findById(final Long id) {
         return TravelResponse.from(findTravel(id));
     }
 
     /*
      * STEP 4. Dirty Checking을 이용한 수정.
      * findTravel()이 findById()로 조회한 Entity는 영속성 컨텍스트가 관리하는 영속 상태다.
-     * 이 상태에서 travel.update(...)로 필드만 바꾸면, 메서드가 끝나고 트랜잭션이 커밋될 때
+     * 이 상태에서 updateXxx()로 필드만 바꾸면, 메서드가 끝나고 트랜잭션이 커밋될 때
      * Hibernate가 최초 조회 값(스냅샷)과 현재 값을 비교해 달라진 컬럼만 UPDATE 한다.
      * 그래서 repository.save()를 호출하지 않아도 DB에 반영된다.
-     * (save()를 호출하면 변경 감지가 아니라 merge()가 실행되어 불필요한 동작이 한 번 더 생긴다.)
      */
-    public TravelResponse update(Long id, TravelRequest request) {
-        Travel travel = findTravel(id);
-        travel.update(request.destination(), request.country(), request.city(),
-                request.departureDate(), request.durationDays(), request.budget());
+    @Transactional
+    public TravelResponse update(final Long id, final TravelRequest request) {
+        if (id == null) {
+            throw new CustomException(ExceptionCode.ID_NOT_FOUND);
+        }
+        validateRequest(request);
+
+        final Travel travel = findTravel(id);
+
+        travel.updateDestination(request.destination());
+        travel.updateCountry(request.country());
+        travel.updateCity(request.city());
+        travel.updateDepartureDate(request.departureDate());
+        travel.updateDurationDays(request.durationDays());
+        travel.updateBudget(request.budget());
+
         return TravelResponse.from(travel);
     }
 
-    public void delete(Long id) {
-        findTravel(id);
+    public void delete(final Long id) {
+        if (id == null) {
+            throw new CustomException(ExceptionCode.ID_NOT_FOUND);
+        }
+        // deleteById()는 대상이 없어도 예외 없이 지나가므로, 먼저 존재 여부를 확인해 404로 응답한다.
+        if (!repository.existsById(id)) {
+            throw new CustomException(ExceptionCode.ID_NOT_FOUND);
+        }
+
         repository.deleteById(id);
     }
 
@@ -108,16 +145,31 @@ public class TravelService {
      *   트랜잭션과 영속성 컨텍스트를 유지해 주기 때문에 Dirty Checking이 동작한다.
      * - 반대로 트랜잭션 밖에서 조회한 Entity는 준영속(detached) 상태가 되어 변경을 감지하지 못하고,
      *   값을 바꿔도 DB에 반영되지 않는다.
-     * - 그래서 @Transactional이 없으면 save()를 다시 호출해야 반영되고,
-     *   @Transactional이 있으면 save() 없이도 커밋 시점에 자동으로 UPDATE 된다.
      */
-    private Travel findTravel(Long id) {
+    private Travel findTravel(final Long id) {
+        if (id == null) {
+            throw new CustomException(ExceptionCode.ID_NOT_FOUND);
+        }
+
         return repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found"));
+                .orElseThrow(() -> new CustomException(ExceptionCode.ID_NOT_FOUND));
+    }
+
+    // 등록·수정 요청의 필수 값 검증. DB에 가기 전에 400으로 막는다.
+    private void validateRequest(final TravelRequest request) {
+        if (request == null
+                || request.destination() == null || request.destination().isBlank()
+                || request.country() == null || request.country().isBlank()
+                || request.city() == null || request.city().isBlank()
+                || request.departureDate() == null
+                || request.durationDays() == null
+                || request.budget() == null) {
+            throw new CustomException(ExceptionCode.INVALID_REQUEST);
+        }
     }
 
     // Entity 목록을 응답 DTO 목록으로 바꾸는 공통 처리. 검색 메서드마다 반복하지 않도록 분리했다.
-    private List<TravelResponse> toResponses(List<Travel> travels) {
+    private List<TravelResponse> toResponses(final List<Travel> travels) {
         return travels.stream().map(TravelResponse::from).toList();
     }
 }

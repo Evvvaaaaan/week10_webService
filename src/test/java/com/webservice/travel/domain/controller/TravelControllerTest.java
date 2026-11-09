@@ -1,11 +1,12 @@
-package com.webservice.travel.controller;
+package com.webservice.travel.domain.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.webservice.travel.dto.TravelRequest;
-import com.webservice.travel.service.TravelService;
+import com.webservice.travel.domain.dto.TravelRequest;
+import com.webservice.travel.domain.service.TravelService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,5 +87,23 @@ class TravelControllerTest {
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].destination").value("Tokyo tour"))
                 .andExpect(jsonPath("$[1].destination").value("Osaka tour"));
+    }
+
+    // 필수 값이 빠진 등록 요청은 서비스에서 막혀 400과 INVALID_REQUEST를 응답한다.
+    @Test
+    void createWithMissingFieldReturns400() throws Exception {
+        mockMvc.perform(post("/api/travels")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"destination\":\"Busan Beach\",\"country\":\"South Korea\",\"city\":\"Busan\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
+    // 없는 id 조회는 404와 ID_NOT_FOUND를 응답한다.
+    @Test
+    void findUnknownIdReturns404() throws Exception {
+        mockMvc.perform(get("/api/travels/9999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("ID_NOT_FOUND"));
     }
 }

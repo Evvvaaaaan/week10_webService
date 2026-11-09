@@ -1,4 +1,4 @@
-package com.webservice.travel.entity;
+package com.webservice.travel.domain.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

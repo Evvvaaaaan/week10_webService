@@ -22,6 +22,7 @@
 - GET /api/travels?country=Japan&minDays=5&maxDays=7 : 국가와 여행일수 범위 검색
 - GET /api/travels?keyword=tour : 여행지 부분 검색, 예산 내림차순
 - GET /api/travels?minBudget=500000 : 예산 초과 검색, 출발일 오름차순
+- 필수 값이 빠지면 400 INVALID_REQUEST, 없는 id는 404 ID_NOT_FOUND를 JSON으로 응답한다.
 
 ## 실행 방법
 
@@ -106,7 +107,7 @@
 
 ## Problem & Solution
 
-- save()를 지웠는데 수정이 반영되지 않을까 걱정했다. @Transactional이 클래스에 선언되어 있어 조회한 Entity가 영속 상태로 유지되었고, 커밋 시점에 UPDATE가 실행됐다.
+- save()를 지웠는데 수정이 반영되지 않을까 걱정했다. update()에 @Transactional이 선언되어 있어 조회한 Entity가 영속 상태로 유지되었고, 커밋 시점에 UPDATE가 실행됐다.
 - 실행하자 Unable to determine Dialect without JDBC metadata 오류가 났다. DB_URL 환경변수가 없어 접속 주소가 비었고, DB에 붙지 못해 Hibernate가 DB 종류를 판단하지 못한 것이었다. 환경변수에 기본값을 넣는 형식으로 바꾸고 Docker로 MariaDB를 띄워 해결했다.
 - 검색 키워드를 소문자로 넣었을 때 결과가 일부만 나왔다. Containing만으로는 DB의 대소문자 처리 방식에 따라 결과가 달라져서 IgnoreCase를 붙였다.
 - 검색 API를 GET /api/travels?keyword= 형태로 만들면서 전체 조회와 경로가 겹쳤다. @GetMapping(params = ...)로 파라미터가 붙은 요청만 검색 메서드로 보내 해결했다.

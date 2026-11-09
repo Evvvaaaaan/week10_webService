@@ -1,4 +1,4 @@
-package com.webservice.travel.dto;
+package com.webservice.travel.domain.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

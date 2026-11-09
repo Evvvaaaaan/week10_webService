@@ -1,6 +1,6 @@
-package com.webservice.travel.repository;
+package com.webservice.travel.domain.repository;
 
-import com.webservice.travel.entity.Travel;
+import com.webservice.travel.domain.model.Travel;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;

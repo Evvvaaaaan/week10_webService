@@ -1,4 +1,4 @@
-package com.webservice.travel.entity;
+package com.webservice.travel.domain.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -93,18 +93,15 @@ public class Travel {
     }
 
     /*
-     * setter 대신 의미 있는 이름의 수정 메서드를 두었다.
+     * setter 대신 의미 있는 이름의 수정 메서드를 필드마다 두었다.
      * 이 메서드로 필드 값을 바꾸면 영속성 컨텍스트가 원래 값과 비교해 변경을 감지한다(Dirty Checking).
      */
-    public void update(String destination, String country, String city,
-                       LocalDate departureDate, Integer durationDays, BigDecimal budget) {
-        this.destination = destination;
-        this.country = country;
-        this.city = city;
-        this.departureDate = departureDate;
-        this.durationDays = durationDays;
-        this.budget = budget;
-    }
+    public void updateDestination(String destination) { this.destination = destination; }
+    public void updateCountry(String country) { this.country = country; }
+    public void updateCity(String city) { this.city = city; }
+    public void updateDepartureDate(LocalDate departureDate) { this.departureDate = departureDate; }
+    public void updateDurationDays(Integer durationDays) { this.durationDays = durationDays; }
+    public void updateBudget(BigDecimal budget) { this.budget = budget; }
 
     public Long getId() { return id; }
     public String getDestination() { return destination; }

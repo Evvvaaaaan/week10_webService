@@ -1,8 +1,8 @@
-package com.webservice.travel.controller;
+package com.webservice.travel.domain.controller;
 
-import com.webservice.travel.dto.TravelRequest;
-import com.webservice.travel.dto.TravelResponse;
-import com.webservice.travel.service.TravelService;
+import com.webservice.travel.domain.dto.TravelRequest;
+import com.webservice.travel.domain.dto.TravelResponse;
+import com.webservice.travel.domain.service.TravelService;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 /*
  * @RestController는 반환값을 JSON으로 응답 본문에 담아 보내는 컨트롤러라는 뜻이다.
  * @RequestMapping("/api/travels")는 이 클래스의 모든 경로 앞에 /api/travels를 붙인다.
+ * 모든 메서드가 ResponseEntity를 반환해 상태 코드와 본문을 함께 명시한다.
  */
 @RestController
 @RequestMapping("/api/travels")
@@ -39,8 +40,8 @@ public class TravelController {
 
     // GET /api/travels : 전체 조회
     @GetMapping
-    public List<TravelResponse> findAll() {
-        return service.findAll();
+    public ResponseEntity<List<TravelResponse>> findAll() {
+        return ResponseEntity.ok().body(service.findAll());
     }
 
     /*
@@ -53,14 +54,14 @@ public class TravelController {
 
     // GET /api/travels?keyword=tour : 여행지 부분 일치 + 예산 내림차순
     @GetMapping(params = "keyword")
-    public List<TravelResponse> searchByDestination(@RequestParam String keyword) {
-        return service.findByDestinationKeyword(keyword);
+    public ResponseEntity<List<TravelResponse>> searchByDestination(@RequestParam String keyword) {
+        return ResponseEntity.ok().body(service.findByDestinationKeyword(keyword));
     }
 
     // GET /api/travels?country=Japan : 국가 일치 (단일 조건)
     @GetMapping(params = "country")
-    public List<TravelResponse> searchByCountry(@RequestParam String country) {
-        return service.findByCountry(country);
+    public ResponseEntity<List<TravelResponse>> searchByCountry(@RequestParam String country) {
+        return ResponseEntity.ok().body(service.findByCountry(country));
     }
 
     /*
@@ -68,28 +69,28 @@ public class TravelController {
      * 파라미터 3개를 모두 요구하므로, country만 붙은 요청보다 이 메서드가 더 구체적으로 매칭된다.
      */
     @GetMapping(params = {"country", "minDays", "maxDays"})
-    public List<TravelResponse> searchByCountryAndDuration(@RequestParam String country,
-                                                           @RequestParam Integer minDays,
-                                                           @RequestParam Integer maxDays) {
-        return service.findByCountryAndDurationDaysBetween(country, minDays, maxDays);
+    public ResponseEntity<List<TravelResponse>> searchByCountryAndDuration(@RequestParam String country,
+                                                                           @RequestParam Integer minDays,
+                                                                           @RequestParam Integer maxDays) {
+        return ResponseEntity.ok().body(service.findByCountryAndDurationDaysBetween(country, minDays, maxDays));
     }
 
     // GET /api/travels?minBudget=500000 : 예산 초과 + 출발일 오름차순
     @GetMapping(params = "minBudget")
-    public List<TravelResponse> searchByBudget(@RequestParam BigDecimal minBudget) {
-        return service.findByMinBudget(minBudget);
+    public ResponseEntity<List<TravelResponse>> searchByBudget(@RequestParam BigDecimal minBudget) {
+        return ResponseEntity.ok().body(service.findByMinBudget(minBudget));
     }
 
     // GET /api/travels/{id} : 단건 조회
     @GetMapping("/{id}")
-    public TravelResponse findById(@PathVariable Long id) {
-        return service.findById(id);
+    public ResponseEntity<TravelResponse> findById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(service.findById(id));
     }
 
     // PUT /api/travels/{id} : 수정
     @PutMapping("/{id}")
-    public TravelResponse update(@PathVariable Long id, @RequestBody TravelRequest request) {
-        return service.update(id, request);
+    public ResponseEntity<TravelResponse> update(@PathVariable Long id, @RequestBody TravelRequest request) {
+        return ResponseEntity.ok().body(service.update(id, request));
     }
 
     // DELETE /api/travels/{id} : 삭제. 204 No Content, 본문 없음

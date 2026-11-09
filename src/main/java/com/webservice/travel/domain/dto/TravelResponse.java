@@ -1,6 +1,6 @@
-package com.webservice.travel.dto;
+package com.webservice.travel.domain.dto;
 
-import com.webservice.travel.entity.Travel;
+import com.webservice.travel.domain.model.Travel;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -1,11 +1,14 @@
-package com.webservice.travel.service;
+package com.webservice.travel.domain.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.webservice.travel.dto.TravelRequest;
-import com.webservice.travel.dto.TravelResponse;
-import com.webservice.travel.entity.Travel;
-import com.webservice.travel.repository.TravelRepository;
+import com.webservice.travel.domain.dto.TravelRequest;
+import com.webservice.travel.domain.dto.TravelResponse;
+import com.webservice.travel.domain.model.Travel;
+import com.webservice.travel.domain.repository.TravelRepository;
+import com.webservice.travel.global.exception.CustomException;
+import com.webservice.travel.global.exception.constant.ExceptionCode;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -92,5 +95,24 @@ class TravelServiceTest {
         List<TravelResponse> expensiveFirst = service.findByMinBudget(new BigDecimal("500000"));
         assertThat(expensiveFirst).extracting(TravelResponse::destination)
                 .containsExactly("Tokyo tour", "Osaka tour");
+    }
+
+    @Test
+    void createWithMissingFieldThrowsInvalidRequest() {
+        TravelRequest incomplete = new TravelRequest("Busan Beach", "South Korea", "Busan",
+                LocalDate.of(2027, 2, 10), 2, null);
+
+        assertThatThrownBy(() -> service.create(incomplete))
+                .isInstanceOf(CustomException.class)
+                .extracting("exceptionCode")
+                .isEqualTo(ExceptionCode.INVALID_REQUEST);
+    }
+
+    @Test
+    void findByIdWithUnknownIdThrowsIdNotFound() {
+        assertThatThrownBy(() -> service.findById(9999L))
+                .isInstanceOf(CustomException.class)
+                .extracting("exceptionCode")
+                .isEqualTo(ExceptionCode.ID_NOT_FOUND);
     }
 }
